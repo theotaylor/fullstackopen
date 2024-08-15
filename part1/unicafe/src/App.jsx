@@ -81,12 +81,11 @@ const Statistics = (props) => {
   }
 }
 
-const StatisticLine = (props) => {
+const StatisticLine = ({ text, value} ) => {
   return (
     <tr>
       <td>{props.text}</td>
       <td>{props.value}</td>
-      <td>{props.additional}</td>
     </tr>
   )
 }

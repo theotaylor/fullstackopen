@@ -3,7 +3,7 @@ const App = () => {
     name: 'Half Stack application development',
     parts: [
       {
-        name: 'Fundamental of React',
+        name: 'Fundamental of React', 
         exercises: 10
       },
       {
@@ -13,7 +13,7 @@ const App = () => {
       {
         name: 'State of a component', 
         exercises: 14
-      }
+      } 
     ]
   }
 
