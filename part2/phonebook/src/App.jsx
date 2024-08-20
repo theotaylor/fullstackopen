@@ -1,25 +1,22 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
-
+import personsService from '../services/persons'
 
 const App = () => {
   const [persons, setPersons] = useState([]) 
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [newSearch, setSearch] = useState('')
+  const [addPersonMessage, setAddedPersonMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
+  const [idCounter, setIdCounter] = useState(3)
 
-  const hook = () => {
-    console.log('effect')
-    axios
-    .get('http://localhost:3001/persons')
-    .then(response => {
-      console.log('promise fulfilled')
-      setPersons(response)
-    })
-  }
-
-  useEffect(hook, [])
-  console.log('render', notes.length, 'notes')
+  useEffect(() => {
+    personsService
+      .getAll()
+      .then(initialPersons => {
+        setPersons(initialPersons)
+      })
+  }, [])
 
   const handleSearch = (event) => {
     setSearch(event.target.value)
@@ -33,17 +30,71 @@ const App = () => {
     setNewNumber(event.target.value)
   }
 
+  const deletePerson = (id) => {
+    const person = persons.find(person => person.id === id)
+    if (window.confirm(`Delete ${person.name} ?`)) {
+      personsService
+        .deletion(id)
+        .then(() => {
+          const newPersons = persons.filter(person => person.id !== id)
+          setPersons(newPersons)
+          console.log("deletion successful")
+        })
+    }
+  }
+
+  const updatePerson = () => {
+    if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
+      const existingPerson = persons.find(person => person.name === newName)
+
+      const newPerson = {
+        name: newName, 
+        number: newNumber,
+        id: existingPerson.id,
+      }
+            
+      personsService
+        .update(existingPerson.id, newPerson)
+        .then(returnedPerson => {
+          setPersons(persons.map(person => person.id === returnedPerson.id ? returnedPerson : person))
+          setNewName('')
+          setNewNumber('')
+        })
+        .catch(error => {
+          setErrorMessage(`${newPerson.name} has already been deleted`)
+          setTimeout(() => {
+            setErrorMessage(null)
+          }, 5000)
+        })
+    } 
+  }
+
   const addPerson = (event) => {
     event.preventDefault()
+
     const isPersonAlreadyExisting = persons.some(person => person.name === newName)
     if (isPersonAlreadyExisting) {
-      alert(`${newName} is already in the phone book`)
-      return
+      updatePerson()
+    } else {
+      const newPerson = {
+        name: newName, 
+        number: newNumber,
+        id: String(idCounter),
+      }
+      setIdCounter(idCounter + 1)
+  
+      personsService
+        .create(newPerson)
+        .then(returnedPersons => {
+          setPersons(persons.concat(returnedPersons))
+          setNewName('')
+          setNewNumber('')
+        })
+      setAddedPersonMessage(`Added ${newPerson.name}`)
+      setTimeout(() => {
+        setAddedPersonMessage(null)
+      }, 2000)
     }
-    const newPerson = {name: newName, number: newNumber}
-    setPersons(persons.concat(newPerson))
-    setNewName('')
-    setNewNumber('')
   }
 
   const filteredPersons = persons.filter(persons => 
@@ -53,7 +104,9 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
-      <Search newSearch={newSearch} handleSearch={handleSearch}/>  
+      <AddNotification message={addPersonMessage}/>
+      <ErrorNotification message={errorMessage}/>
+      filter shown with <Search newSearch={newSearch} handleSearch={handleSearch}/>  
       <h3>add a new</h3>
       <PersonForm 
         newName={newName}
@@ -63,7 +116,7 @@ const App = () => {
         handleNumberAdd={handleNumberAdd}
       />
       <h3>Numbers</h3>
-      <Persons persons={filteredPersons}/>
+      <Persons persons={filteredPersons} deletePerson={deletePerson}/>
     </div>
   )
 }
@@ -87,12 +140,58 @@ const PersonForm = ({newName, newNumber, addPerson, handleNameAdd, handleNumberA
   )
 }
 
-const Persons = ({persons}) => {
+const Persons = ({persons, deletePerson}) => {
   return (
-    persons.map(person => <Person key={person.name} name={person.name} number={person.number}/>)
+    persons.map(person => <Person key={person.id} name={person.name} number={person.number} id={person.id} deletePerson={deletePerson}/>)
   )
 }
 
-const Person = ({name, number}) => <p>{name} {number}</p>
+const Person = ({name, number, id, deletePerson}) => {
+  return (
+    <p>
+      {name} {number} <button onClick={() => deletePerson(id)}>delete</button>
+    </p>
+  )
+}
+
+const AddNotification = ({message}) => {
+  if (!message) {
+    return null
+  } else {
+    const notifStyle = {
+      border: '2px solid green',
+      backgroundColor: 'rgb(203 203 203)',
+      color: 'green',
+      padding: '0 0 0 20px',
+      borderRadius: '8px',
+      marginBottom: '10px',
+    }
+    return (
+        <div className="notif" style={notifStyle}>
+          <h3>{message}</h3>
+        </div>
+      )
+  }
+}
+
+const ErrorNotification = ({message}) => {
+  if (!message) {
+    return null
+  } else {
+    const errorStyling = {
+      border: '2px solid red',
+      backgroundColor: 'rgb(203 203 203)',
+      color: 'green',
+      padding: '0 0 0 20px',
+      borderRadius: '8px',
+      marginBottom: '10px',
+     }
+    return (
+      <div className="error" style={errorStyling}>
+        <h3>{message}</h3>
+      </div>
+    )
+  }
+}
 
 export default App
