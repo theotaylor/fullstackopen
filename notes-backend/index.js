@@ -28,16 +28,13 @@ let notes = [
 
 const password = process.argv[2]
 
-const mongoUrl = process.env.MONGODB_URI
-if (!mongoUrl) {
-  throw new Error('MONGODB_URI environment variable not set');
-}
+const url = process.env.MONGODB_URI
 
 mongoose.set('strictQuery', false)
-//mongoose.connect(url)
-mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(error => console.error('Error connecting to MongoDB:', error.message));
+mongoose.connect(url)
+// mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
+//   .then(() => console.log('Connected to MongoDB'))
+//   .catch(error => console.error('Error connecting to MongoDB:', error.message));
 
 const noteSchema = new mongoose.Schema({
   content: String,
