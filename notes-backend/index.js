@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const cors = require('cors')
+const mongoose = require('mongoose')
 
 app.use(cors())
 
@@ -21,6 +22,20 @@ let notes = [
     important: true
   }
 ]
+
+const password = process.argv[2]
+
+const url = process.env.MONGODB_URI
+
+mongoose.set('strictQuery', false)
+mongoose.connect(url)
+
+const noteSchema = new mongoose.Schema({
+  content: String,
+  important: Boolean
+})
+
+const Note = mongoose.model('Note', noteSchema)
 
 const requestLogger = (request, response, next) => {
   console.log('Method:', request.method)
@@ -43,7 +58,9 @@ app.get('/', (request, response) => {
 })
 
 app.get('/api/notes', (request, response) => {
-  response.json(notes)
+  Note.find({}).then(notes => {
+    response.json(notes)
+  })
 })
 
 const generateId = () => {
