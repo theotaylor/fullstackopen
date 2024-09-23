@@ -1,0 +1,8 @@
+post http://localhost:3001/api/login
+Content-type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ
+
+{
+    "username": "jimmy",
+    "password": "neutron"
+}
