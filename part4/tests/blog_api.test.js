@@ -1,9 +1,11 @@
 const {describe, test, beforeEach, after} = require('node:test')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const helper = require('./test_helper')
 const app = require('../app')
+const bcrypt = require('bcrypt')
 const assert = require('node:assert')
 
 const api = supertest(app)
@@ -13,6 +15,8 @@ beforeEach(async () => {
     const blogs = helper.initialBlogs.map(blog => new Blog(blog))
     const promiseArray = blogs.map(blog => blog.save())
     await Promise.all(promiseArray)
+    // await Blog.deleteMany({})
+    // await Blog.insertMany(helper.initialBlogs)
 })
 
 describe('testing blog api get', () => {
@@ -156,9 +160,45 @@ describe('testing blog updates', () => {
         assert.strictEqual(updatedBlogInDB.likes, updatedBlog.likes)
         
     })
+    //test invalid user add
+    describe('when there is initially one user in db', () => {
+        beforeEach(async () => {
+            await User.deleteMany({})
+
+            const passwordHash = await bcrypt.hash('sekret', 10)
+            const user = new User({ username: 'root', passwordHash })
+
+            await user.save()
+        })
+
+        test('creation succeeds with a fresh username', async () => {
+            const usersAtStart = await helper.usersInDb()
+            const newUser = {
+                name: 'Lilly',
+                username: 'Lil Ian',
+                password: 'yayeet'
+            }
+
+            await api
+                .post('/api/users')
+                .send(newUser)
+                .expect(201)
+                .expect('Content-type', /application\/json/)
+            
+            const usersAfter = await helper.usersInDb()
+            console.log('Users at start:', usersAtStart);
+            console.log('Users after creation:', usersAfter);
+
+            assert.strictEqual(usersAtStart.length + 1, usersAfter.length)
+
+            const usernames = usersAfter.map(u => u.username)
+            assert.ok(usernames.includes(newUser.username))
+        })
+    })
 })
 
 after(async () => {
+    await User.deleteMany({})
     await mongoose.connection.close()
 })
 
