@@ -1,0 +1,11 @@
+POST http://localhost:3004/api/blogs
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRoZW8xIiwiaWQiOiI2NmY1OTYxMmJkNDlkZGEzZDBkNmM4ZTYiLCJpYXQiOjE3MjczNzA3ODQsImV4cCI6MTcyNzM3NDM4NH0.-XhSLj86Mk6j_qcqfX6kKxQsA9ZuLwHzvhnI2KpPoCE
+
+{
+    "title": "theotitle",
+    "author": "theoauthor",
+    "url": "theourl",
+    "likes": 1
+}
+
